@@ -1,0 +1,43 @@
+# 모아(moa) 로컬 개발 환경
+#
+#   docker compose up -d   MySQL만 (평소 이걸 씁니다)
+#   docker compose --profile app up -d --build  앱까지 컨테이너로
+#
+# 앱은 평소 IntelliJ에서 실행합니다. 코드를 고칠 때마다 다시 빌드하지 않아도 되고,
+# 디버거와 SQL 로그를 그대로 쓸 수 있습니다.
+
+services:
+  mysql:
+    image: mysql:9.7
+    container_name: moa-mysql
+    ports:
+      - "3306:3306"  # 이미 3306을 쓰고 있으면 "3307:3306" 으로 바꾸세요
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: moa    # 컨테이너가 알아서 만들어 줍니다
+      TZ: Asia/Seoul
+    volumes:
+      - moa-mysql:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  app:
+    profiles: ["app"]  # --profile app 을 붙였을 때만 뜹니다
+    build: .
+    container_name: moa-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/moa?useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
+      TZ: Asia/Seoul
+
+volumes:
+  moa-mysql:
