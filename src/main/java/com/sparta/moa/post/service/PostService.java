@@ -4,6 +4,7 @@ import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
+import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -100,6 +101,17 @@ public class PostService {
     public PostResponse findOne(Long postId) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+
+        return PostResponse.from(post);
+    }
+
+    @Transactional
+    public PostResponse update(Long postId, PostUpdateRequest request) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+
+        post.update(request.title(), request.content());
 
         return PostResponse.from(post);
     }

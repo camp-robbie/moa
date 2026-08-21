@@ -2,6 +2,7 @@ package com.sparta.moa.post.controller;
 
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
+import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -37,6 +38,14 @@ public class PostController {
     @GetMapping("/{postId}")
     public ResponseEntity<PostResponse> findOne(@PathVariable Long postId) {
         return ResponseEntity.ok(postService.findOne(postId));
+    }
+
+    @PutMapping("/{postId}")
+    public ResponseEntity<PostResponse> update(
+            @PathVariable Long postId,
+            @RequestBody PostUpdateRequest request) {
+
+        return ResponseEntity.ok(postService.update(postId, request));
     }
 
 }
