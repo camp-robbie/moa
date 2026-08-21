@@ -41,6 +41,9 @@ public class Post extends BaseEntity {
         this.content = content;
     }
 
-    // TODO 5. 여기에 update(String title, String content) 를 만듭니다
-    //   Setter 를 열지 말고, 이름이 있는 메서드 하나만 엽니다
+    public void update(String title, String content) {
+        this.title = title;
+        this.content = content;
+    }
+
 }
