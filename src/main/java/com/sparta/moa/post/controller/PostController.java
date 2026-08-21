@@ -34,4 +34,9 @@ public class PostController {
         return ResponseEntity.ok(postService.findAll(pageable));
     }
 
+    @GetMapping("/{postId}")
+    public ResponseEntity<PostResponse> findOne(@PathVariable Long postId) {
+        return ResponseEntity.ok(postService.findOne(postId));
+    }
+
 }
