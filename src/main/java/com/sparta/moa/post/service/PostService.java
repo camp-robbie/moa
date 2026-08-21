@@ -116,4 +116,13 @@ public class PostService {
         return PostResponse.from(post);
     }
 
+    @Transactional
+    public void delete(Long postId) {
+
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+
+        postRepository.delete(post);
+    }
+
 }
