@@ -1,5 +1,6 @@
 package com.sparta.moa.post.service;
 
+import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
 import com.sparta.moa.post.dto.PostCreateRequest;
@@ -8,6 +9,7 @@ import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -99,8 +101,7 @@ public class PostService {
     }
 
     public PostResponse findOne(Long postId) {
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+        Post post = findPostOrThrow(postId);
 
         return PostResponse.from(post);
     }
@@ -108,8 +109,7 @@ public class PostService {
     @Transactional
     public PostResponse update(Long postId, PostUpdateRequest request) {
 
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+        Post post = findPostOrThrow(postId);
 
         post.update(request.title(), request.content());
 
@@ -118,11 +118,14 @@ public class PostService {
 
     @Transactional
     public void delete(Long postId) {
-
-        Post post = postRepository.findById(postId)
-                .orElseThrow(() -> new IllegalArgumentException("게시글을 찾을 수 없습니다"));
+        Post post = findPostOrThrow(postId);
 
         postRepository.delete(post);
+    }
+
+    private Post findPostOrThrow(Long postId) {
+        return postRepository.findById(postId)
+                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다. id = " + postId));
     }
 
 }

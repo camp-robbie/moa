@@ -1,9 +1,12 @@
 package com.sparta.moa.post.controller;
 
+import com.sparta.moa.common.dto.ApiResponse;
+import com.sparta.moa.common.dto.PageResponse;
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
 import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,30 +25,50 @@ public class PostController {
 
     // 게시글 등록 API : POST /api/posts
     @PostMapping
-    public ResponseEntity<PostResponse> create(@RequestBody PostCreateRequest request) {
+    public ResponseEntity<ApiResponse<PostResponse>> create(@Valid @RequestBody PostCreateRequest request) {
         // service 호출 실제 비즈니스 작업을 service에 위임한다.
-        return ResponseEntity.status(HttpStatus.CREATED).body(postService.create(request));
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(
+                        HttpStatus.CREATED,
+                        postService.create(request)
+                )
+        );
     }
 
     // 게시글 목록 페이징 조회 API : GET /api/posts
     @GetMapping
-    public ResponseEntity<Page<PostResponse>> findAll(
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> findAll(
            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
-        return ResponseEntity.ok(postService.findAll(pageable));
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        PageResponse.from(postService.findAll(pageable))
+                )
+        );
     }
 
     @GetMapping("/{postId}")
-    public ResponseEntity<PostResponse> findOne(@PathVariable Long postId) {
-        return ResponseEntity.ok(postService.findOne(postId));
+    public ResponseEntity<ApiResponse<PostResponse>> findOne(@PathVariable Long postId) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        postService.findOne(postId)
+                )
+        );
     }
 
     @PutMapping("/{postId}")
-    public ResponseEntity<PostResponse> update(
+    public ResponseEntity<ApiResponse<PostResponse>> update(
             @PathVariable Long postId,
-            @RequestBody PostUpdateRequest request) {
+            @Valid @RequestBody PostUpdateRequest request) {
 
-        return ResponseEntity.ok(postService.update(postId, request));
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        HttpStatus.OK,
+                        postService.update(postId, request)
+                )
+        );
     }
 
     @DeleteMapping("/{postId}")
