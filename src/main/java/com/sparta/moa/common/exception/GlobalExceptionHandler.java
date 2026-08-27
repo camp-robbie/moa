@@ -32,6 +32,24 @@ public class GlobalExceptionHandler {
                 .body(ApiResponse.error(HttpStatus.NOT_FOUND, e.getMessage()));
     }
 
+    @ExceptionHandler(ForbiddenException.class)
+    public ResponseEntity<ApiResponse<Void>> handleForbidden(ForbiddenException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.error(HttpStatus.FORBIDDEN, e.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicate(DuplicateEmailException e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(HttpStatus.CONFLICT, e.getMessage()));
+    }
+
+    @ExceptionHandler(LoginFailedException.class)
+    public ResponseEntity<ApiResponse<Void>> handleLoginFailed(LoginFailedException e) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ApiResponse.error(HttpStatus.UNAUTHORIZED, e.getMessage()));
+    }
+
     // 예상하지 못한 예외까지 마지막에 받아서 모양을 맞춘다
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception e) {

@@ -1,5 +1,6 @@
 package com.sparta.moa.post.service;
 
+import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
@@ -15,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.awt.*;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -23,15 +26,13 @@ public class PostService {
     // Post 테이블에 게시글 저장하기 위해 DB 연결을 담당하는 Repository 필요
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
-
-    private static final Long TEMP_MEMBER_ID = 1L;
-
+    
     // 게시글 등록
     @Transactional
-    public PostResponse create(PostCreateRequest request) {
+    public PostResponse create(Long memberId, PostCreateRequest request) {
 
         // 멤버 조회 (게시글을 작성한 사람을 저장: member_id) : Optional<Member>
-        Member member = memberRepository.findById(TEMP_MEMBER_ID).orElseThrow(
+        Member member = memberRepository.findById(memberId).orElseThrow(
                 () -> new IllegalArgumentException("회원을 찾을 수 없습니다.")
         );
 
@@ -107,9 +108,12 @@ public class PostService {
     }
 
     @Transactional
-    public PostResponse update(Long postId, PostUpdateRequest request) {
-
+    public PostResponse update(Long postId, Long memberId, PostUpdateRequest request) {
+        
+        // 소유권 SQL : select * from post where id = 2 and member_id = 1; => 해당 게시글의 소유자가 아니면 조회가 안됨!
         Post post = findPostOrThrow(postId);
+
+        validateOwner(post, memberId);
 
         post.update(request.title(), request.content());
 
@@ -117,10 +121,17 @@ public class PostService {
     }
 
     @Transactional
-    public void delete(Long postId) {
+    public void delete(Long postId, Long memberId) {
         Post post = findPostOrThrow(postId);
 
+        validateOwner(post, memberId);
         postRepository.delete(post);
+    }
+
+    private void validateOwner(Post post, Long memberId) {
+        if(!post.getMember().getId().equals(memberId)) { // 해당 게시글의 작성자 id == 토큰에 꺼내온 로그인한 회원 id
+            throw new ForbiddenException("해당 게시글의 소유자만 수정 및 삭제가 가능합니다.");
+        }
     }
 
     private Post findPostOrThrow(Long postId) {

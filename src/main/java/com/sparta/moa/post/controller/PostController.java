@@ -2,6 +2,7 @@ package com.sparta.moa.post.controller;
 
 import com.sparta.moa.common.dto.ApiResponse;
 import com.sparta.moa.common.dto.PageResponse;
+import com.sparta.moa.common.security.MemberDetails;
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
 import com.sparta.moa.post.dto.PostUpdateRequest;
@@ -14,6 +15,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -25,12 +27,15 @@ public class PostController {
 
     // 게시글 등록 API : POST /api/posts
     @PostMapping
-    public ResponseEntity<ApiResponse<PostResponse>> create(@Valid @RequestBody PostCreateRequest request) {
+    public ResponseEntity<ApiResponse<PostResponse>> create(
+            @Valid @RequestBody PostCreateRequest request,
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
         // service 호출 실제 비즈니스 작업을 service에 위임한다.
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.success(
                         HttpStatus.CREATED,
-                        postService.create(request)
+                        postService.create(memberDetails.getMemberId(), request)
                 )
         );
     }
@@ -38,7 +43,7 @@ public class PostController {
     // 게시글 목록 페이징 조회 API : GET /api/posts
     @GetMapping
     public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> findAll(
-           @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable
     ) {
         return ResponseEntity.ok(
                 ApiResponse.success(
@@ -61,19 +66,22 @@ public class PostController {
     @PutMapping("/{postId}")
     public ResponseEntity<ApiResponse<PostResponse>> update(
             @PathVariable Long postId,
-            @Valid @RequestBody PostUpdateRequest request) {
+            @Valid @RequestBody PostUpdateRequest request,
+            @AuthenticationPrincipal MemberDetails memberDetails
+    ) {
 
         return ResponseEntity.ok(
                 ApiResponse.success(
                         HttpStatus.OK,
-                        postService.update(postId, request)
+                        postService.update(postId, memberDetails.getMemberId(), request)
                 )
         );
     }
 
     @DeleteMapping("/{postId}")
-    public ResponseEntity<Void> delete(@PathVariable Long postId) {
-        postService.delete(postId);
+    public ResponseEntity<Void> delete(@PathVariable Long postId,
+                                       @AuthenticationPrincipal MemberDetails memberDetails) {
+        postService.delete(postId, memberDetails.getMemberId());
         return ResponseEntity.noContent().build();
     }
 

@@ -27,6 +27,10 @@ spring:
         max-page-size: 100
         default-page-size: 10
 
+jwt:
+  # 32바이트
+  secret: moa-local-dev-secret-key-please-change-me-32bytes
+
 logging:
   level:
     org.hibernate.SQL: debug
