@@ -1,10 +1,10 @@
--- 로그인이 아직 없어서 회원을 미리 넣어 둡니다.
--- 1번 회원이 PostService.TEMP_MEMBER_ID 입니다.
--- 비밀번호는 21회차에서 BCrypt 로 해싱합니다.
+-- 비밀번호는 전부 password1234! 이고, BCrypt 해시로 저장되어 있습니다.
 INSERT IGNORE INTO member (id, email, password, nickname, created_at, updated_at) VALUES
-(1, 'moa@example.com',   'password1234!', '모아', NOW(), NOW()),
-(2, 'sujin@example.com', 'password1234!', '수진', NOW(), NOW()),
-(3, 'daeun@example.com', 'password1234!', '다은', NOW(), NOW());
+(1, 'moa@example.com',   '$2a$10$m1YEoJialw2FwBHUpl62wuKWEBoXLFQr5LisB9X03X41o56Ur86oy', '모아', NOW(), NOW()),
+(2, 'sujin@example.com', '$2a$10$/ivi9dThquZz.UmxfX50DuE1Ib7bDRO5LLNPGgW6lF9lrceHegbNq', '수진', NOW(), NOW()),
+(3, 'daeun@example.com', '$2a$10$pYTlG0L1RguOLCxoXWZwPuisdONSwXR8Q6e5yKvW4KcP6RXD8tbCO', '다은', NOW(), NOW()),
+-- 비밀번호 temp1234 입니다.
+(4, 'sparta@example.com', '$2a$10$BlSB3Of4B/aWSseCwSzNH.bzGtCMMgnG0m0sh0xdUwijQl9JB9Lka', '스파르타', NOW(), NOW());
 
 -- 페이징이 바로 보이도록 글을 15개 넣어 둡니다.
 -- 10개가 넘어야 두 번째 페이지가 생기고, 화면 아래에 페이지 버튼이 나타납니다.
