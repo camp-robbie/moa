@@ -1,5 +1,34 @@
 const BASE = '';
-let token = null, me = null;
+
+/* ---------- 토큰 보관: 쿠키 저장소 ----------
+   로그인 응답의 accessToken을 쿠키에 넣어 두고, 새로고침하면 다시 꺼내 쓴다.
+   서버는 이 쿠키를 읽지 않는다 — 인증은 그대로 Authorization 헤더로 보낸다. */
+const C_TOKEN  = 'moa_token';
+const C_ME     = 'moa_me';
+const C_MAXAGE = 60 * 60;                 // JWT 만료(1시간)와 맞춘다
+
+function readCookie(name){
+  const hit = document.cookie.split('; ').find(c => c.startsWith(name + '='));
+  return hit ? decodeURIComponent(hit.slice(name.length + 1)) : null;
+}
+function writeCookie(name, value){
+  document.cookie =
+    `${name}=${encodeURIComponent(value)}; path=/; max-age=${C_MAXAGE}; SameSite=Lax`;
+}
+function eraseCookie(name){
+  document.cookie = `${name}=; path=/; max-age=0; SameSite=Lax`;
+}
+
+let token = readCookie(C_TOKEN), me = null;
+try { me = JSON.parse(readCookie(C_ME) || 'null'); } catch(e){ me = null; }
+if (!token || !me) { token = null; me = null; }   // 쿠키가 반쪽이면 로그아웃 상태로 시작
+
+/* 로그인·로그아웃·401 — 토큰이 바뀌는 곳은 전부 여기를 지난다 */
+function setAuth(t, m){
+  token = t; me = m;
+  if (t){ writeCookie(C_TOKEN, t); writeCookie(C_ME, JSON.stringify(m)); }
+  else  { eraseCookie(C_TOKEN);    eraseCookie(C_ME); }
+}
 class ApiError extends Error{ constructor(status,message){ super(message); this.status=status; } }
 
 async function call(method, url, body){
@@ -13,7 +42,7 @@ async function call(method, url, body){
   if (res.status === 401 && !url.startsWith('/api/members/login')) {
     // 서버가 "누구인지 모르겠다"고 하면 로그인 화면으로 보낸다.
     // 로그인 기능이 아직 없는 회차에는 401 자체가 나오지 않으므로 이 길로 오지 않는다.
-    token = null; me = null; paintChrome();
+    setAuth(null, null); paintChrome();
     toast('로그인이 필요합니다');
     go('#/login');
   }

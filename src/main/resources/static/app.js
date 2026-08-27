@@ -320,7 +320,7 @@ async function login(){
   $('#formErr').textContent = '';
   try{
     const r = await call('POST','/api/members/login',{ email:$('#lEmail').value, password:$('#lPw').value });
-    token = r.accessToken; me = r.member ?? { nickname:'나' };
+    setAuth(r.accessToken, r.member ?? { nickname:'나' });
     paintChrome(); toast(`${esc(me.nickname)}님, 환영합니다`); go('#/posts');
     connectRealtime();
   }catch(e){ fail(e); }
@@ -351,7 +351,7 @@ async function signup(){
     toast('가입이 완료되었습니다'); go('#/login');
   }catch(e){ fail(e); }
 }
-function logout(){ token=null; me=null; NOTI=[]; dropRealtime(); closePops(); paintChrome(); toast('로그아웃했습니다'); go('#/posts'); }
+function logout(){ setAuth(null, null); NOTI=[]; dropRealtime(); closePops(); paintChrome(); toast('로그아웃했습니다'); go('#/posts'); }
 
 /* ---------- 알림 ---------- */
 let NOTI = [];
@@ -496,4 +496,6 @@ function render(){
 }
 window.addEventListener('hashchange', render);
 
+// 새로고침으로 들어왔는데 쿠키에 토큰이 남아 있으면 실시간도 다시 붙인다
+if (token) connectRealtime();
 render();
