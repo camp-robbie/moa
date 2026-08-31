@@ -239,13 +239,15 @@ async function viewDetail(id){
   loadComments(id);
 }
 
-async function loadComments(postId, cursor){
+// 커서 페이징 : 댓글은 오래된 순(asc)이라 다음 장은 "더 최신" 이다.
+// loaded 는 지금까지 화면에 그린 개수. 전체 개수를 서버가 세지 않으므로 우리가 누적한다.
+async function loadComments(postId, cursor, loaded = 0){
   try{
     const list = await call('GET', `/api/posts/${postId}/comments?size=20${cursor?`&cursor=${cursor}`:''}`);
     const items = Array.isArray(list) ? list : list.content;
     const box = $('#comments'); if (!box) return;
     const html = items.length ? items.map(c=>{
-      const mine = !me || me.nickname === c.nickname;
+      const mine = !!me && me.nickname === c.nickname;   // 로그아웃이면 버튼을 그리지 않는다
       return `<div class="cm" id="c${c.id}">
         ${avatar(c.nickname)}
         <div class="cmbody">
@@ -257,11 +259,18 @@ async function loadComments(postId, cursor){
           </div>
           <div class="cmtext">${esc(c.content)}</div>
         </div></div>`;
-    }).join('') : `<div class="empty" style="padding:36px 0">첫 댓글을 남겨 보세요</div>`;
-    if (cursor) box.insertAdjacentHTML('afterbegin', html); else box.innerHTML = html;
-    if (!cursor) set('#cmCnt', items.length ? `${items.length}개` : '');
-    const next = Array.isArray(list) ? null : list.nextCursor;
-    set('#moreWrap', next ? `<button class="btn sm plain" onclick="loadComments(${postId},'${next}')">이전 댓글 더 보기</button>` : '');
+    }).join('') : (cursor ? '' : `<div class="empty" style="padding:36px 0">첫 댓글을 남겨 보세요</div>`);
+    // 오래된 순이므로 다음 장은 아래에 이어 붙인다 (쪽지는 최신순이라 반대다)
+    if (cursor) box.insertAdjacentHTML('beforeend', html); else box.innerHTML = html;
+    const next  = Array.isArray(list) ? null : list.nextCursor;
+    const total = loaded + items.length;
+
+    // 커서 페이징은 전체 개수를 세지 않는다(count 쿼리를 안 쓰는 것이 장점).
+    // 그래서 아직 남아 있으면 "20개+" 처럼 열어 두고, 다 불러오면 정확한 수가 된다.
+    set('#cmCnt', total ? `${total}개${next ? '+' : ''}` : '');
+    set('#moreWrap', next
+        ? `<button class="btn sm plain" onclick="loadComments(${postId},'${next}',${total})">다음 댓글 더 보기</button>`
+        : '');
   }catch(e){
     $('#cmCard')?.remove();     // 댓글 API가 아직 없으면 섹션째로 빠진다
   }
