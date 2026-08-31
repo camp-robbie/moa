@@ -94,28 +94,40 @@ const skeletonRows = () => Array(5).fill(`
 async function viewList(){
   const q = new URLSearchParams(location.hash.split('?')[1] || '');
   const page = +(q.get('page')||0);
-  const cond = { title:q.get('title')||'', nickname:q.get('nickname')||'' };
-  const searching = !!(cond.title || cond.nickname);
+  const cond = { title:q.get('title')||'', nickname:q.get('nickname')||'',
+    from:q.get('from')||'',   to:q.get('to')||'' };
+  const searching = !!(cond.title || cond.nickname || cond.from || cond.to);
 
   view().innerHTML = `
     <div class="feedhead">
       <div><h1>${searching ? '검색 결과' : '전체글'}</h1><div class="sub" id="cnt">&nbsp;</div></div>
     </div>
     <div class="searchrow">
-      <input id="q" placeholder="제목이나 작성자로 검색" value="${esc(cond.title||cond.nickname)}"
+      <input id="q-title" placeholder="제목" value="${esc(cond.title)}"
+             onkeydown="if(event.key==='Enter')doSearch()">
+      <input id="q-nickname" placeholder="작성자" value="${esc(cond.nickname)}"
+             onkeydown="if(event.key==='Enter')doSearch()">
+      <input id="q-from" type="date" class="q-date" value="${esc(cond.from)}"
+             onkeydown="if(event.key==='Enter')doSearch()">
+      <span class="q-tilde">~</span>
+      <input id="q-to" type="date" class="q-date" value="${esc(cond.to)}"
              onkeydown="if(event.key==='Enter')doSearch()">
       <button class="btn primary" onclick="doSearch()">검색</button>
     </div>
     ${searching ? `<div class="filters">
-      <span class="chip">${esc(cond.title||cond.nickname)}<button onclick="go('#/posts')">×</button></span>
+      ${chips(cond)}
+      <button class="btn sm plain" onclick="go('#/posts')">전체 보기</button>
     </div>`:''}
     <div class="card"><div id="rows">${skeletonRows()}</div><div class="pager" id="pager"></div></div>`;
   paintSide();
 
   try{
+    // 값이 있는 조건만 실어 보낸다. 빈 조건은 서버가 무시하지만 주소도 깔끔한 편이 낫다
+    const sp = new URLSearchParams({ page, size:10 });
+    for (const k of ['title','nickname','from','to']) if (cond[k]) sp.set(k, cond[k]);
     const url = searching
-      ? `/api/posts/search?page=${page}&size=10&title=${encodeURIComponent(cond.title)}&nickname=${encodeURIComponent(cond.nickname)}`
-      : `/api/posts?page=${page}&size=10&sort=createdAt,desc`;
+        ? `/api/posts/search?${sp}`
+        : `/api/posts?page=${page}&size=10&sort=createdAt,desc`;
     const p = await call('GET', url);
     set('#cnt', p.totalElements ? `${p.totalElements.toLocaleString()}개의 글` : '&nbsp;');
     set('#rows', p.content.length ? p.content.map(post=>`
@@ -130,7 +142,7 @@ async function viewList(){
             ${post.commentCount ? `<span class="sep"></span><span>댓글 ${post.commentCount}</span>`:''}
           </div>
         </div></div>`).join('')
-      : `<div class="empty"><div class="big">🔍</div>${searching?'조건에 맞는 글이 없습니다':'아직 글이 없습니다'}</div>`);
+        : `<div class="empty"><div class="big">🔍</div>${searching?'조건에 맞는 글이 없습니다':'아직 글이 없습니다'}</div>`);
     drawPager(p, cond);
   }catch(e){
     set('#rows', `<div class="empty">${searching ? '검색을 사용할 수 없습니다' : esc(e.message)}</div>`);
@@ -148,9 +160,26 @@ function drawPager(p, cond){
   h += `<button ${cur>=total-1?'disabled':''} onclick="go('${qs(cur+1)}')">›</button>`;
   $('#pager').innerHTML = total > 1 ? h : '';
 }
+const CONDLABEL = { title:'제목', nickname:'작성자', from:'시작일', to:'종료일' };
+
+function chips(cond){
+  return Object.keys(CONDLABEL).filter(k => cond[k]).map(k => {
+    const rest = new URLSearchParams();
+    for (const j in cond) if (j !== k && cond[j]) rest.set(j, cond[j]);
+    const href = rest.toString() ? '#/posts?' + rest : '#/posts';
+    return `<span class="chip">${CONDLABEL[k]} ${esc(cond[k])}` +
+        `<button title="이 조건만 빼기" onclick="go('${href}')">×</button></span>`;
+  }).join('');
+}
+
 function doSearch(){
-  const v = $('#q').value.trim();
-  go(v ? '#/posts?' + new URLSearchParams({ title:v }) : '#/posts');
+  const u = new URLSearchParams();
+  const put = (k, el) => { const v = ($(el)?.value || '').trim(); if (v) u.set(k, v); };
+  put('title',   '#q-title');
+  put('nickname','#q-nickname');
+  put('from',    '#q-from');
+  put('to',      '#q-to');
+  go(u.toString() ? '#/posts?' + u : '#/posts');
 }
 
 /* ---------- 상세 ---------- */
@@ -241,7 +270,7 @@ async function addComment(postId){
   const el = $('#cText'); if (!el.value.trim()) return;
   $('#formErr').textContent = '';
   try{ await call('POST', `/api/posts/${postId}/comments`, { content: el.value.trim() });
-       el.value=''; loadComments(postId); }
+    el.value=''; loadComments(postId); }
   catch(e){ fail(e); }
 }
 async function editComment(postId,id){
@@ -347,7 +376,7 @@ async function signup(){
   $('#formErr').textContent = '';
   try{
     await call('POST','/api/members/signup',
-      { email:$('#sEmail').value, password:$('#sPw').value, nickname:$('#sNick').value });
+        { email:$('#sEmail').value, password:$('#sPw').value, nickname:$('#sNick').value });
     toast('가입이 완료되었습니다'); go('#/login');
   }catch(e){ fail(e); }
 }
@@ -366,14 +395,14 @@ function paintNoti(){
         <div style="line-height:1.5;font-size:13.5px"><b>${esc(n.who)}</b>님이 ${esc(n.text)}</div>
         <div class="sub" style="font-size:12px">${ago(n.at)}</div>
       </div></button>`).join('')
-    : `<div class="empty" style="padding:40px 0;font-size:14px">새 알림이 없습니다</div>`);
+      : `<div class="empty" style="padding:40px 0;font-size:14px">새 알림이 없습니다</div>`);
 }
 function pushNoti(n){
   NOTI.unshift({ id:Date.now()+Math.floor(Math.random()*1000), read:false,
-                 at:new Date().toISOString().slice(0,19), ...n });
+    at:new Date().toISOString().slice(0,19), ...n });
   paintNoti();
   toast(`<span>🔔</span><span><b>${esc(n.who)}</b>님이 ${esc(n.text)}</span>`,
-        () => { if (n.postId) go('#/posts/'+n.postId); });
+      () => { if (n.postId) go('#/posts/'+n.postId); });
 }
 function openNoti(id){
   const n = NOTI.find(x=>x.id===id); if(!n) return;
@@ -435,7 +464,7 @@ async function loadMsgs(cursor){
       <div class="bub">${esc(m.content)}</div><div class="btime">${hhmm(m.sentAt)}</div>
     </div>`).join('');
   const more = r.nextCursor
-    ? `<button class="btn sm plain" id="moreMsg" style="align-self:center;margin-bottom:10px"
+      ? `<button class="btn sm plain" id="moreMsg" style="align-self:center;margin-bottom:10px"
          onclick="loadMsgs('${r.nextCursor}')">이전 대화 더 보기</button>` : '';
   if (cursor){
     const before = box.scrollHeight;
@@ -470,7 +499,7 @@ async function viewTimeline(){
           <div class="ex">${esc(excerpt(post.content))}</div>
           <div class="meta"><b>${esc(post.nickname)}</b><span class="sep"></span><span>${ago(post.createdAt)}</span></div>
         </div></div>`).join('')
-      : `<div class="empty">팔로우한 사람이 없습니다</div>`);
+        : `<div class="empty">팔로우한 사람이 없습니다</div>`);
   }catch(e){
     set('#rows', `<div class="empty">타임라인을 사용할 수 없습니다</div>`);
   }
@@ -481,7 +510,7 @@ const SOLO = ['#/login','#/signup','#/write','#/messages'];
 function render(){
   const path = (location.hash||'#/posts').split('?')[0];
   document.querySelector('.wrap').classList.toggle('solo',
-    SOLO.includes(path) || /^#\/posts\/\d+\/edit$/.test(path));
+      SOLO.includes(path) || /^#\/posts\/\d+\/edit$/.test(path));
   closePops(); paintChrome();
   let m;
   if (path==='#/posts'||path==='#/'||path==='') return viewList();
