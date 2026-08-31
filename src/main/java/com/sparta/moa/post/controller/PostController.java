@@ -5,6 +5,7 @@ import com.sparta.moa.common.dto.PageResponse;
 import com.sparta.moa.common.security.MemberDetails;
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
+import com.sparta.moa.post.dto.PostSearchCondition;
 import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.service.PostService;
 import jakarta.validation.Valid;
@@ -48,7 +49,7 @@ public class PostController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         HttpStatus.OK,
-                        PageResponse.from(postService.findAll(pageable))
+                        postService.findAll(pageable)
                 )
         );
     }
@@ -61,6 +62,15 @@ public class PostController {
                         postService.findOne(postId)
                 )
         );
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse<PageResponse<PostResponse>>> search(
+            @ModelAttribute PostSearchCondition condition,
+            @PageableDefault(size = 10) Pageable pageable) {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(HttpStatus.OK, postService.search(condition, pageable)));
     }
 
     @PutMapping("/{postId}")
