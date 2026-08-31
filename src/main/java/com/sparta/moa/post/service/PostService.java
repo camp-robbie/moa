@@ -1,11 +1,13 @@
 package com.sparta.moa.post.service;
 
+import com.sparta.moa.common.dto.PageResponse;
 import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
 import com.sparta.moa.post.dto.PostCreateRequest;
 import com.sparta.moa.post.dto.PostResponse;
+import com.sparta.moa.post.dto.PostSearchCondition;
 import com.sparta.moa.post.dto.PostUpdateRequest;
 import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
@@ -52,7 +54,7 @@ public class PostService {
     }
 
     // 게시글 목록 조회 : 페이징 (10개씩)
-    public Page<PostResponse> findAll(Pageable pageable) {
+    public PageResponse<PostResponse> findAll(Pageable pageable) {
 
         /** 페이징
          *
@@ -73,7 +75,9 @@ public class PostService {
         return postResponsePage;
         **/
 
-        return postRepository.findAll(pageable).map(PostResponse::from);
+        return PageResponse.from(
+                postRepository.findAll(pageable).map(PostResponse::from)
+        );
 
         /** v2
         return postRepository.findAll().stream()
@@ -105,6 +109,12 @@ public class PostService {
         Post post = findPostOrThrow(postId);
 
         return PostResponse.from(post);
+    }
+
+    public PageResponse<PostResponse> search(PostSearchCondition condition, Pageable pageable) {
+        return PageResponse.from(
+                postRepository.search(condition, pageable).map(PostResponse::from)
+        );
     }
 
     @Transactional
