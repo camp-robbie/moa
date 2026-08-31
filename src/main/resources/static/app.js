@@ -194,9 +194,8 @@ async function viewDetail(id){
       <div style="margin-top:16px"><button class="btn" onclick="go('#/posts')">전체글로</button></div></div></div>`;
     return;
   }
-  // 로그인 기능이 아직 없으면(= 로그인하지 않은 상태) 내 글로 보고 버튼을 연다.
-  // 서버에 소유권 검사가 생기면 그때부터 401·403이 돌아온다.
-  const mine = !me || me.nickname === post.nickname;
+  // 로그인한 사람의 글일 때만 수정·삭제를 연다. 로그아웃이면 아무것도 내 것이 아니다.
+  const mine = !!me && me.nickname === post.nickname;
   view().innerHTML = `
     <div class="card pad article">
       <h1>${esc(post.title)}</h1>
@@ -523,12 +522,12 @@ function render(){
   closePops(); paintChrome();
   let m;
   if (path==='#/posts'||path==='#/'||path==='') return viewList();
-  if (path==='#/write') return viewForm(null);
+  if (path==='#/write') return me ? viewForm(null) : go('#/login');
   if (path==='#/login') return viewLogin();
   if (path==='#/signup') return viewSignup();
   if (path==='#/messages') return me ? viewMessages() : go('#/login');
   if (path==='#/timeline') return me ? viewTimeline() : go('#/login');
-  if ((m=path.match(/^#\/posts\/(\d+)\/edit$/))) return viewForm(+m[1]);
+  if ((m=path.match(/^#\/posts\/(\d+)\/edit$/))) return me ? viewForm(+m[1]) : go('#/login');
   if ((m=path.match(/^#\/posts\/(\d+)$/))) return viewDetail(+m[1]);
   view().innerHTML = `<div class="card"><div class="empty"><div class="big">🚧</div>준비 중입니다</div></div>`;
 }
