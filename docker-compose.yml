@@ -1,6 +1,6 @@
 # 모아(moa) 로컬 개발 환경
 #
-#   docker compose up -d   MySQL만 (평소 이걸 씁니다)
+#   docker compose up -d   MySQL + Redis (평소 이걸 씁니다)
 #   docker compose --profile app up -d --build  앱까지 컨테이너로
 #
 # 앱은 평소 IntelliJ에서 실행합니다. 코드를 고칠 때마다 다시 빌드하지 않아도 되고,
@@ -24,6 +24,21 @@ services:
       timeout: 3s
       retries: 20
 
+  redis:
+    image: redis:8.10
+    container_name: moa-redis
+    ports:
+      - "6379:6379"
+    environment:
+      TZ: Asia/Seoul
+    volumes:
+      - moa-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
   app:
     profiles: ["app"]  # --profile app 을 붙였을 때만 뜹니다
     build: .
@@ -33,11 +48,15 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/moa?useSSL=false&allowPublicKeyRetrieval=true
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: root
+      SPRING_DATA_REDIS_HOST: redis
       TZ: Asia/Seoul
 
 volumes:
   moa-mysql:
+  moa-redis:
