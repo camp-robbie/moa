@@ -80,7 +80,8 @@ public class PostService {
         **/
 
         return PageResponse.from(
-                postRepository.findAll(pageable).map(PostResponse::from)
+                postRepository.findAllWithCommentCount(pageable)
+                        .map(pwc -> PostResponse.from(pwc.post(), pwc.commentCount()))
         );
 
         /** v2
