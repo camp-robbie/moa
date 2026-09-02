@@ -13,6 +13,8 @@ import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.NonNull;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,6 +33,7 @@ public class PostService {
     
     // 게시글 등록
     @Transactional
+    @CacheEvict(value = "postList", allEntries = true)
     public PostResponse create(Long memberId, PostCreateRequest request) {
 
         // 멤버 조회 (게시글을 작성한 사람을 저장: member_id) : Optional<Member>
@@ -54,6 +57,7 @@ public class PostService {
     }
 
     // 게시글 목록 조회 : 페이징 (10개씩)
+    @Cacheable(value = "postList", key = "#pageable.pageNumber + ':' + #pageable.pageSize")
     public PageResponse<PostResponse> findAll(Pageable pageable) {
 
         /** 페이징
@@ -118,6 +122,7 @@ public class PostService {
     }
 
     @Transactional
+    @CacheEvict(value = "postList", allEntries = true)
     public PostResponse update(Long postId, Long memberId, PostUpdateRequest request) {
         
         // 소유권 SQL : select * from post where id = 2 and member_id = 1; => 해당 게시글의 소유자가 아니면 조회가 안됨!
@@ -131,6 +136,7 @@ public class PostService {
     }
 
     @Transactional
+    @CacheEvict(value = "postList", allEntries = true)
     public void delete(Long postId, Long memberId) {
         Post post = findPostOrThrow(postId);
 
