@@ -13,7 +13,10 @@ import java.util.List;
 
 @Getter
 @Entity
-@Table(name = "post")
+@Table(
+        name = "post",
+        indexes = @Index(name = "idx_post_created_at", columnList = "created_at")
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Post extends BaseEntity {
 
