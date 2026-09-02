@@ -5,6 +5,7 @@ import com.sparta.moa.comment.dto.CommentResponse;
 import com.sparta.moa.comment.dto.CommentUpdateRequest;
 import com.sparta.moa.comment.entity.Comment;
 import com.sparta.moa.comment.repository.CommentRepository;
+import com.sparta.moa.common.dto.CursorResponse;
 import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
@@ -41,16 +42,13 @@ public class CommentService {
         return CommentResponse.from(comment);
     }
 
-    public List<CommentResponse> findByPost(Long postId) {
+    public CursorResponse<CommentResponse> findByPost(Long postId, Long cursor, int size) {
 
         if (!postRepository.existsById(postId)) {
             throw new NotFoundException("게시글을 찾을 수 없습니다. id=" + postId);
         }
 
-        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
-                .stream()
-                .map(CommentResponse::from)
-                .toList();
+        return commentRepository.findByCursor(postId, cursor, size);
     }
 
     @Transactional
