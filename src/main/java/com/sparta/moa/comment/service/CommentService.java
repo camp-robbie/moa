@@ -5,6 +5,7 @@ import com.sparta.moa.comment.dto.CommentResponse;
 import com.sparta.moa.comment.dto.CommentUpdateRequest;
 import com.sparta.moa.comment.entity.Comment;
 import com.sparta.moa.comment.repository.CommentRepository;
+import com.sparta.moa.common.dto.CursorResponse;
 import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
@@ -12,6 +13,7 @@ import com.sparta.moa.member.repository.MemberRepository;
 import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +29,7 @@ public class CommentService {
     private final MemberRepository memberRepository;
 
     @Transactional
+    @CacheEvict(value = "postList", allEntries = true)
     public CommentResponse create(Long postId, Long memberId, CommentCreateRequest request) {
 
         Post post = postRepository.findById(postId)
@@ -41,16 +44,13 @@ public class CommentService {
         return CommentResponse.from(comment);
     }
 
-    public List<CommentResponse> findByPost(Long postId) {
+    public CursorResponse<CommentResponse> findByPost(Long postId, Long cursor, int size) {
 
         if (!postRepository.existsById(postId)) {
             throw new NotFoundException("게시글을 찾을 수 없습니다. id=" + postId);
         }
 
-        return commentRepository.findByPostIdOrderByCreatedAtAsc(postId)
-                .stream()
-                .map(CommentResponse::from)
-                .toList();
+        return commentRepository.findByCursor(postId, cursor, size);
     }
 
     @Transactional
@@ -68,6 +68,7 @@ public class CommentService {
     }
 
     @Transactional
+    @CacheEvict(value = "postList", allEntries = true)
     public void delete(Long postId, Long commentId, Long memberId) {
 
         Comment comment = findCommentOrThrow(postId, commentId);

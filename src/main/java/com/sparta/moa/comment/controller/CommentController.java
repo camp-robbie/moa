@@ -5,6 +5,7 @@ import com.sparta.moa.comment.dto.CommentResponse;
 import com.sparta.moa.comment.dto.CommentUpdateRequest;
 import com.sparta.moa.comment.service.CommentService;
 import com.sparta.moa.common.dto.ApiResponse;
+import com.sparta.moa.common.dto.CursorResponse;
 import com.sparta.moa.common.security.MemberDetails;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -36,11 +37,13 @@ public class CommentController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<CommentResponse>>> findByPost(
-            @PathVariable Long postId) {
+    public ResponseEntity<ApiResponse<CursorResponse<CommentResponse>>> findByPost(
+            @PathVariable Long postId,
+            @RequestParam(required = false) Long cursor,
+            @RequestParam(defaultValue = "20") int size) {
 
-        return ResponseEntity.ok(
-                ApiResponse.success(HttpStatus.OK, commentService.findByPost(postId)));
+        return ResponseEntity.ok(ApiResponse.success(
+                HttpStatus.OK, commentService.findByPost(postId, cursor, size)));
     }
 
     @PutMapping("/{commentId}")
