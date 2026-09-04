@@ -10,6 +10,8 @@ public record PostResponse(
         String content,
         String nickname,
         Long commentCount,
+        Long likeCount,
+        boolean liked,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {
@@ -24,8 +26,15 @@ public record PostResponse(
                 post.getContent(),
                 post.getMember().getNickname(),
                 commentCount,
+                post.getLikeCount(),
+                false,                      // liked 는 나중에 채웁니다
                 post.getCreatedAt(),
                 post.getUpdatedAt()
         );
+    }
+
+    public PostResponse withLiked(boolean liked) {
+        return new PostResponse(id, title, content, nickname,
+                commentCount, likeCount, liked, createdAt, updatedAt);
     }
 }
