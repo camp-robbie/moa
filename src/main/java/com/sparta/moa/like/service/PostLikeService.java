@@ -29,7 +29,7 @@ public class PostLikeService {
             throw new ConflictException("이미 좋아요를 누른 게시글입니다");
         }
 
-        Post post = postRepository.findByIdForUpdate(postId)
+        Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
 
         Member member = memberRepository.findById(memberId)

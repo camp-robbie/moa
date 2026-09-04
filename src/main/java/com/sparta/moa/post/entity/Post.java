@@ -44,6 +44,9 @@ public class Post extends BaseEntity {
     @Column(nullable = false)
     private Long likeCount = 0L;
 
+    @Version
+    private Long version;
+
     public Post(Member member, String title, String content) {
         this.member = member;
         this.title = title;
