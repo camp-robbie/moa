@@ -1,8 +1,10 @@
 package com.sparta.moa.post.service;
 
+import com.sparta.moa.comment.repository.CommentRepository;
 import com.sparta.moa.common.dto.PageResponse;
 import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
+import com.sparta.moa.like.repository.PostLikeRepository;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
 import com.sparta.moa.post.dto.PostCreateRequest;
@@ -30,6 +32,8 @@ public class PostService {
     // Post 테이블에 게시글 저장하기 위해 DB 연결을 담당하는 Repository 필요
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
+    private final CommentRepository commentRepository;
+    private final PostLikeRepository postLikeRepository;
     
     // 게시글 등록
     @Transactional
@@ -140,8 +144,11 @@ public class PostService {
     @CacheEvict(value = "postList", allEntries = true)
     public void delete(Long postId, Long memberId) {
         Post post = findPostOrThrow(postId);
-
         validateOwner(post, memberId);
+
+        commentRepository.deleteAllByPostId(postId);
+        postLikeRepository.deleteAllByPostId(postId);
+
         postRepository.delete(post);
     }
 
