@@ -29,7 +29,7 @@ public class PostLikeService {
             throw new ConflictException("이미 좋아요를 누른 게시글입니다");
         }
 
-        Post post = postRepository.findById(postId)
+        Post post = postRepository.findByIdForUpdate(postId)
                 .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
 
         Member member = memberRepository.findById(memberId)
@@ -48,7 +48,9 @@ public class PostLikeService {
                 .findByPostIdAndMemberId(postId, memberId)
                 .orElseThrow(() -> new NotFoundException("좋아요를 누르지 않은 게시글입니다"));
 
-        Post post = postLike.getPost();
+        // postLike.getPost() 는 잠기지 않은 조회라 여기서 다시 잠그고 가져옵니다
+        Post post = postRepository.findByIdForUpdate(postId)
+                .orElseThrow(() -> new NotFoundException("게시글을 찾을 수 없습니다. id=" + postId));
 
         postLikeRepository.delete(postLike);
         post.decreaseLikeCount();
