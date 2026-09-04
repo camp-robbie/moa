@@ -10,7 +10,13 @@ import lombok.NoArgsConstructor;
 
 @Getter
 @Entity
-@Table(name = "post_like")
+@Table(
+        name = "post_like",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_post_like_post_member",
+                columnNames = {"post_id", "member_id"}
+        )
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PostLike extends BaseEntity {
 
