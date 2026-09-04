@@ -2,6 +2,7 @@ package com.sparta.moa.post.entity;
 
 import com.sparta.moa.comment.entity.Comment;
 import com.sparta.moa.common.entity.BaseEntity;
+import com.sparta.moa.like.entity.PostLike;
 import com.sparta.moa.member.entity.Member;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -31,11 +32,17 @@ public class Post extends BaseEntity {
     @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
     private List<Comment> comments = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post", cascade = CascadeType.REMOVE)
+    private List<PostLike> postLikes = new ArrayList<>();
+
     @Column(nullable = false, length = 200)
     private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(nullable = false)
+    private Long likeCount = 0L;
 
     public Post(Member member, String title, String content) {
         this.member = member;
@@ -46,6 +53,16 @@ public class Post extends BaseEntity {
     public void update(String title, String content) {
         this.title = title;
         this.content = content;
+    }
+
+    public void increaseLikeCount() {
+        this.likeCount++;
+    }
+
+    public void decreaseLikeCount() {
+        if (this.likeCount > 0) {
+            this.likeCount--;
+        }
     }
 
 }
