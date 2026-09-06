@@ -104,14 +104,14 @@ async function viewList(){
     </div>
     <div class="searchrow">
       <input id="q-title" placeholder="제목" value="${esc(cond.title)}"
-             onkeydown="if(event.key==='Enter')doSearch()">
+             onkeydown="if(event.key==='Enter'&&!event.isComposing)doSearch()">
       <input id="q-nickname" placeholder="작성자" value="${esc(cond.nickname)}"
-             onkeydown="if(event.key==='Enter')doSearch()">
+             onkeydown="if(event.key==='Enter'&&!event.isComposing)doSearch()">
       <input id="q-from" type="date" class="q-date" value="${esc(cond.from)}"
-             onkeydown="if(event.key==='Enter')doSearch()">
+             onkeydown="if(event.key==='Enter'&&!event.isComposing)doSearch()">
       <span class="q-tilde">~</span>
       <input id="q-to" type="date" class="q-date" value="${esc(cond.to)}"
-             onkeydown="if(event.key==='Enter')doSearch()">
+             onkeydown="if(event.key==='Enter'&&!event.isComposing)doSearch()">
       <button class="btn primary" onclick="doSearch()">검색</button>
     </div>
     ${searching ? `<div class="filters">
@@ -341,9 +341,9 @@ function viewLogin(){
     <div class="center"><div class="card pad">
       <h1 style="font-size:22px;text-align:center;margin-bottom:22px">로그인</h1>
       <div class="field"><label>이메일</label>
-        <input id="lEmail" value="sparta@example.com" onkeydown="if(event.key==='Enter')login()"></div>
+        <input id="lEmail" value="sparta@example.com" onkeydown="if(event.key==='Enter'&&!event.isComposing)login()"></div>
       <div class="field"><label>비밀번호</label>
-        <input id="lPw" type="password" value="temp1234" onkeydown="if(event.key==='Enter')login()"></div>
+        <input id="lPw" type="password" value="temp1234" onkeydown="if(event.key==='Enter'&&!event.isComposing)login()"></div>
       <div class="formerr" id="formErr"></div>
       <button class="btn primary" style="width:100%;margin-top:6px" onclick="login()">로그인</button>
       <div style="text-align:center;margin-top:16px;font-size:14px;color:var(--ink3)">
@@ -459,7 +459,7 @@ async function openRoom(id){
     <div class="thead">${avatar(curRoom.partner)}<div class="bname">${esc(curRoom.partner)}</div></div>
     <div class="bubbles" id="bubbles"></div>
     <div class="composer">
-      <input id="mText" placeholder="쪽지를 입력하세요" onkeydown="if(event.key==='Enter')sendMsg()">
+      <input id="mText" placeholder="쪽지를 입력하세요" onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMsg()">
       <button class="btn primary" onclick="sendMsg()">전송</button>
     </div>`);
   await loadMsgs();
