@@ -484,11 +484,15 @@ async function loadMsgs(cursor){
     box.scrollTop = box.scrollHeight;
   }
 }
-async function sendMsg(){
+function sendMsg(){
   const el = $('#mText'), text = el.value.trim(); if (!text) return;
+  if (!stomp || !stomp.connected){ toast('실시간 연결이 끊어졌습니다'); return; }
   el.value = '';
-  await call('POST', `/api/chat/rooms/${curRoom.id}/messages`, { content:text });
-  await loadMsgs();
+  // 답을 기다리지 않는다. 서버가 되돌려 주는 에코(/user/queue/messages)를 받고 화면이 갱신된다
+  stomp.publish({
+    destination: `/app/chat/rooms/${curRoom.id}/messages`,
+    body: JSON.stringify({ content:text })
+  });
 }
 
 /* ---------- 타임라인 ---------- */

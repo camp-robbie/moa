@@ -67,7 +67,10 @@ function connectRealtime(){
         const m = JSON.parse(f.body);
         if (location.hash.startsWith('#/messages') && curRoom && curRoom.id === m.roomId){
           ROOMS = await call('GET','/api/chat/rooms'); paintRooms(); await loadMsgs();
-        } else pushNoti({ who:m.sender, text:'쪽지를 보냈습니다' });
+        } else if (m.sender !== me?.nickname) {
+          // 보낸 사람에게도 에코가 온다. 내가 보낸 쪽지로 내 종을 울리지 않는다
+          pushNoti({ who:m.sender, text:'쪽지를 보냈습니다' });
+        }
       });
     },
     onWebSocketError: dropRealtime,
