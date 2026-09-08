@@ -10,6 +10,7 @@ import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
+import com.sparta.moa.notification.service.NotificationService;
 import com.sparta.moa.post.entity.Post;
 import com.sparta.moa.post.repository.PostRepository;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +29,8 @@ public class CommentService {
     private final PostRepository postRepository;
     private final MemberRepository memberRepository;
 
+    private final NotificationService notificationService;
+
     @Transactional
     @CacheEvict(value = "postList", allEntries = true)
     public CommentResponse create(Long postId, Long memberId, CommentCreateRequest request) {
@@ -40,6 +43,8 @@ public class CommentService {
 
         Comment comment = commentRepository.save(
                 new Comment(post, member, request.content()));
+
+        notificationService.notifyNewComment(post, comment);
 
         return CommentResponse.from(comment);
     }
