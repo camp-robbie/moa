@@ -14,6 +14,8 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @RequiredArgsConstructor
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final StompAuthChannelInterceptor stompAuthChannelInterceptor;
+
     // 브라우저가 붙을 자리. 화면은 ws://localhost:8080/ws 로 온다
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -25,5 +27,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.enableSimpleBroker("/topic", "/queue");
     }
-    
+
+    // 브라우저 → 서버 방향의 통로. 여기에 인터셉터를 건다
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(stompAuthChannelInterceptor);
+    }
+
 }
