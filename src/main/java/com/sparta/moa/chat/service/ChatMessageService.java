@@ -9,11 +9,11 @@ import com.sparta.moa.chat.repository.ChatRoomRepository;
 import com.sparta.moa.common.dto.CursorResponse;
 import com.sparta.moa.common.exception.ForbiddenException;
 import com.sparta.moa.common.exception.NotFoundException;
+import com.sparta.moa.common.realtime.RealtimeMessenger;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.member.repository.MemberRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +26,7 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final ChatRoomRepository chatRoomRepository;
     private final MemberRepository memberRepository;
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeMessenger realtimeMessenger;
 
     // 저장까지만. 밀기는 이 트랜잭션 안에서 하지 않는다(3-5)
     @Transactional
@@ -51,16 +51,8 @@ public class ChatMessageService {
 
     // 커밋된 뒤에 불린다. 상대에게 — 그리고 보낸 사람에게도(에코)
     public void push(SentMessage sent) {
-        pushTo(sent.partnerEmail(), sent.push());
-        pushTo(sent.senderEmail(), sent.push());
-    }
-
-    private void pushTo(String email, ChatMessagePush push) {
-        try {
-            messagingTemplate.convertAndSendToUser(email, "/queue/messages", push);
-        } catch (Exception e) {
-            log.warn("쪽지 알림 전송 실패. email={}", email, e);
-        }
+        realtimeMessenger.send(sent.partnerEmail(), "/queue/messages", sent.push());
+        realtimeMessenger.send(sent.senderEmail(), "/queue/messages", sent.push());
     }
 
     public CursorResponse<ChatMessageResponse> findByCursor(

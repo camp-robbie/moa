@@ -1,12 +1,12 @@
 package com.sparta.moa.notification.service;
 
 import com.sparta.moa.comment.entity.Comment;
+import com.sparta.moa.common.realtime.RealtimeMessenger;
 import com.sparta.moa.member.entity.Member;
 import com.sparta.moa.notification.dto.NotificationResponse;
 import com.sparta.moa.post.entity.Post;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class NotificationService {
 
-    private final SimpMessagingTemplate messagingTemplate;
+    private final RealtimeMessenger realtimeMessenger;
 
     public void notifyNewComment(Post post, Comment comment) {
 
@@ -26,15 +26,11 @@ public class NotificationService {
             return;
         }
 
-        try {
-            messagingTemplate.convertAndSendToUser(
-                    receiver.getEmail(),
-                    "/queue/notifications",
-                    new NotificationResponse(
-                            writer.getNickname(), "댓글을 남겼습니다", post.getId()));
-        } catch (Exception e) {
-            // 알림은 부가 기능이다. 실패해도 댓글은 남아야 한다
-            log.warn("알림 전송 실패. postId={}", post.getId(), e);
-        }
+        realtimeMessenger.send(
+                receiver.getEmail(),
+                "/queue/notifications",
+                new NotificationResponse(
+                        writer.getNickname(), "댓글을 남겼습니다", post.getId()));
+
     }
 }
